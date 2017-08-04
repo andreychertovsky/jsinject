@@ -4,10 +4,16 @@
   "version":"0.1",
 
   "background":{
+    "scripts": ["bg.js"],
     "presistent":false
   },
 
-  "premissions":[
-    "tabs"
+  "permissions":[
+    "storage",
+    "tabs",
+    "webRequest",
+    "webRequestBlocking",
+    "*://*/*"
   ]
+
 }
