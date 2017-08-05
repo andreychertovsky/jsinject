@@ -13,7 +13,8 @@
     "tabs",
     "webRequest",
     "webRequestBlocking",
-    "*://*/*"
+    "*://*/*",
+    "cookies"
   ]
 
 }

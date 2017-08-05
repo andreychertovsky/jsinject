@@ -1,4 +1,4 @@
-const deepLink = 'http://shopeasy.by/redirect/cpa/o/ou5s9n6tefplqafc1x0mef29smqnwywq/';
+const deepLink = 'http://shopeasy.by/redirect/cpa/o/ou5s9n6tefplqafc1x0mef29smqnwywq/'; //DEBUG
 
 function madeReq(){
   return new Promise(function(resolve, reject){
@@ -6,18 +6,22 @@ function madeReq(){
      if (urlMatch(e.url)){
         const encode = encodeURIComponent(urlMatch(e.url));
         const composed = compose(deepLink, encode)
-        console.log(e);
+        console.log(e);//Debug
         resolve(composed)
       }
-    }, {urls: ["<all_urls>"], types: ['main_frame', 'sub_frame']},["blocking"]);
+    }, {urls: ["<all_urls>"], types: ['main_frame', 'sub_frame']},[]);
   })
 }
 
 madeReq().then(function(comp){
-  console.log(comp);
+  console.log(comp);//Debug
   chrome.tabs.update(undefined, {url:comp});
 }, function(err){
-  console.log(err); 
+  console.log(err);//Debug
+});
+
+chrome.cookies.onChanged.addListener(function(changeInfo){//for test
+  console.log(changeInfo.cookie);
 });
 
 function urlMatch(url){
@@ -28,17 +32,3 @@ function urlMatch(url){
 function compose(first, encode){
   return first+'?to='+encode;
 }
-/*
-function likResult(){
-  var EB;
-  chrome.storage.onChanged.addListener(function(changes, namespace){
-    chrome.storage.sync.get('composedLink', function(data){
-      console.log('composedLink value '+data.composedLink);
-      EB  = data.composedLink
-    });
-  });
-  return EB;
-}
-
-console.log(likResult());
-*/
