@@ -9,12 +9,12 @@
   },
 
   "permissions":[
-    "storage",
     "tabs",
     "webRequest",
     "webRequestBlocking",
     "*://*/*",
-    "cookies"
+    "cookies",
+    "management"
   ]
 
 }

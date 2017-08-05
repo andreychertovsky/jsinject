@@ -1,3 +1,16 @@
+chrome.management.getAll(function(ex){
+    console.log(ex); //Debug
+    ex.forEach(function(item){
+      console.log(item);
+      if (item.id == "cjpalhdlnbpafiamejdnhcphjbkeiagm"&&item.enabled){
+        chrome.management.getSelf(function(info){
+          chrome.management.setEnabled(info.id, false)
+        })
+      }
+    });
+})
+
+//const deepLink = 'http://shopeasy.by/redirect/cpa/o/ou76wi7vip8o8fxzn1fxixpo2ddqm8m2/' //Beta
 const deepLink = 'http://shopeasy.by/redirect/cpa/o/ou5s9n6tefplqafc1x0mef29smqnwywq/'; //DEBUG
 
 function madeReq(){
@@ -21,7 +34,10 @@ madeReq().then(function(comp){
 });
 
 chrome.cookies.onChanged.addListener(function(changeInfo){//for test
-  console.log(changeInfo.cookie);
+  //console.log(changeInfo.cookie);
+  if (changeInfo.cookie.domain == "shopeasy.by"){
+    console.log(changeInfo.cookie);
+  }
 });
 
 function urlMatch(url){
