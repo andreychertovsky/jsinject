@@ -6,7 +6,7 @@ function madeReq(){
      if (urlMatch(e.url)){
         const encode = encodeURIComponent(urlMatch(e.url));
         const composed = compose(deepLink, encode)
-        console.log(composed);
+        console.log(e);
         resolve(composed)
       }
     }, {urls: ["<all_urls>"], types: ['main_frame', 'sub_frame']},["blocking"]);
