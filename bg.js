@@ -68,6 +68,30 @@ madeReq().then(function(comp){
   console.log(err);//Debug
 });
 
+function statUrl(url){
+  let urlMatch = [/aliexpress/g, /ozon/g, /asos/g, /banggod/g, /gearbest/g
+    , /wildberries/g, /mvideo/g, /litres/g, /aviasales/g, /hotellook/g, /tinkoff/g
+    , /e96/g, /sammydress/g, /svyaznoy/g, /booking/g, /dresslily/g, /mamsy/g, /tutu/g, /ostin/g];
+    urlMatch.forEach(function(item, i){
+      if (item.test(url)){
+        fetch('http://localhost:3000/ext',{
+          method: 'post',
+          headers: {
+            'Accept': 'application/json, text/plain, */*',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({url:item.toString()}) // TOdo
+        })
+        .then(function(response){
+          console.log(response); //Debug
+        })
+        .catch(function(err){
+          console.log('Failed ',err);
+        });
+      }
+    })
+}
+statUrl('http://www.ru.litres.ey/zap/catalog');
 chrome.cookies.onChanged.addListener(function(changeInfo){ //for test
   //console.log(changeInfo.cookie);
   if (changeInfo.cookie.domain == "shopeasy.by"){
