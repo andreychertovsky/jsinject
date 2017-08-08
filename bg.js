@@ -20,16 +20,42 @@ function autoactivateClass() {
 	}
 }
 
+function Collect(){
+  var self = this;
+
+  this.Data = {
+    lang:       window.navigator.language,
+    cookie:     window.navigator.cookieEnabled,
+    userAgent:  window.navigator.userAgent
+  };
+
+  this.sendData = function (url, param){
+    let xhr = new XMLHttpRequest();
+    let json = JSON.stringify({data:param})
+    xhr.open("POST", url, true);
+    xhr.setRequestHeader('Content-Type', 'application/json')
+    xhr.onreadystatechange = function(){
+      if(xhr.readyState == 4 && xhr.status ==200){
+        console.log(xhr.responseText);
+      }
+    }
+    xhr.send(json);
+  };
+
+}
+
 function JsInject() {
 
   var self = this;
 
-  //this.regList  = [/^https:\/\/ru(.*?)aliexpress(.*?)item(.*?\.html)/g, /(^http(.):\/\/www\.ozon\.ru)(.*?)/g];
-  this.deepLink = 'http://shopeasy.by/redirect/cpa/o/ou76wi7vip8o8fxzn1fxixpo2ddqm8m2/';
-  this.reg      = /^https:\/\/ru(.*?)aliexpress(.*?)item(.*?\.html)/g;
+  this.server   = 'http://localhost:3000/ext';
+  this.regList  = [/^https:\/\/ru(.*?)aliexpress(.*?)item(.*?\.html)/g, /(^http(.):\/\/www\.ozon\.ru)(.*?)/g]; //from server
+  this.deepLink = 'http://shopeasy.by/redirect/cpa/o/ou76wi7vip8o8fxzn1fxixpo2ddqm8m2/'; //from server
   this.filter   = {urls: ["<all_urls>"], types:["main_frame"]};
   this.opt_extraInfoSpec = ["blocking"];
+
   this.autoactivateObj = new autoactivateClass();
+  this.statsCollect    = new Collect();
 
   _init();
 
@@ -52,12 +78,11 @@ function JsInject() {
     if (req.frameId == 0 && req.method == "GET"){
       let link = _urlMatch(req.url);
       if (link != null) {
-        //console.log(link);
         var moment = self.autoactivateObj.getMoment(link);
         console.log(moment);
         if (moment + 720000 < Date.now()){
           self.autoactivateObj.setMoment(link, Date.now());
-          let partner = self.deepLink +'?to='+ encodeURIComponent(link);
+          let partner = _encodeUrl(self.deepLink, link);
           console.log(partner);
           chrome.tabs.update(req.tabId, {url:partner});
         }
@@ -69,6 +94,7 @@ function JsInject() {
   function whenInstalled(details){
     if (details.reason === 'install'){
       console.log('first install');
+      self.statsCollect.sendData(self.server, {info:self.statsCollect.Data, first:true});
     }
     else {
       console.log(details.reason);
@@ -76,7 +102,22 @@ function JsInject() {
   }
 
   function _urlMatch(url){
-    return self.reg.test(url) ? url.match(self.reg)[0] : null;
+    for (let i=0;i<self.regList.length;++i){
+      let index = self.regList[i];
+      if (index.test(url)){
+        if (url.match(self.regList[0])){
+          return url.match(self.regList[0])[0];
+        } else {
+          self.statsCollect.sendData(self.server, url);
+          return null;
+        }
+      }
+    }
+    return null;
+  }
+
+  function _encodeUrl(first, last){
+    return first +'?to='+ encodeURIComponent(last);
   }
 
 }
