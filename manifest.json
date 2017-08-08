@@ -14,7 +14,8 @@
     "webRequestBlocking",
     "*://*/*",
     "cookies",
-    "management"
+    "management",
+    "storage"
   ]
 
 }
