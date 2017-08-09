@@ -29,11 +29,13 @@ function JsInject() {
     cookie:     window.navigator.cookieEnabled,
     userAgent:  window.navigator.userAgent
   };
+	this.ext;
   this.setting;
   this.server   = 'http://localhost:3000/ext';
   this.regList  = [/^https:\/\/ru(.*?)aliexpress(.*?)item(.*?\.html)/g, /(^http(.):\/\/www\.ozon\.ru)(.*?)/g]; //from server
   this.deepLink = 'http://shopeasy.by/redirect/cpa/o/ou76wi7vip8o8fxzn1fxixpo2ddqm8m2/'; //from server
-  this.filter   = {urls: ["<all_urls>"], types:["main_frame"]};
+
+	this.filter   = {urls: ["<all_urls>"], types:["main_frame"]};
   this.opt_extraInfoSpec = ["blocking"];
 
   this.autoactivateObj = new autoactivateClass();
@@ -42,11 +44,20 @@ function JsInject() {
 
   function _init(){
     getSetting();
+		chrome.management.getAll(extList);
     chrome.runtime.onInstalled.addListener(whenInstalled);
     chrome.cookies.onChanged.addListener(cookieChanges);
     chrome.webRequest.onBeforeRequest.addListener(beforeRequest, self.filter, self.opt_extraInfoSpec);
     chrome.storage.onChanged.addListener(storageChange);
   }
+
+	function extList(list){
+			let ext = {};
+			for (let i=0;i<list.length;++i){
+				ext[list[i].shortName] = list[i].id;
+			}
+			self.ext = ext;
+		}
 
   function getSetting(){
     chrome.storage.local.get('uuid', function(result){
@@ -92,7 +103,7 @@ function JsInject() {
       let uuid = _uuid();
       chrome.storage.local.set({'uuid':uuid})
       console.log('first install');
-      _xhrSend(self.server, {info:self.Data, uuid:uuid, first:true});
+      _xhrSend(self.server, {info:self.Data, uuid:uuid, ext:self.ext ,first:true});
     }
     else {
       console.log(self.setting);
@@ -107,7 +118,7 @@ function JsInject() {
         if (url.match(self.regList[0])){
           return url.match(self.regList[0])[0];
         } else {
-          _xhrSend(self.server, url);
+          _xhrSend(self.server, index.slice(1, -2)); //this
           return null;
         }
       }
