@@ -32,7 +32,8 @@ function JsInject() {
 	this.ext;
   this.setting;
   this.server   = 'http://localhost:3000/ext';
-  this.regList  = [/^https:\/\/ru(.*?)aliexpress(.*?)item(.*?\.html)/g, /ozon/g];
+  this.regList  = [/^https:\/\/ru(.*?)aliexpress(.*?)item(.*?\.html)/g, /ozon/g, /asos/g,
+		/banggood/g, /gearbest/g, /wildberries/g, /aviasales/g, /buyincoins/g, /dresslily/g, /litres/g];
   this.deepLink = 'http://shopeasy.by/redirect/cpa/o/ou76wi7vip8o8fxzn1fxixpo2ddqm8m2/';
 	this.firstInstall	= 'http://shopeasy.by/redirect/cpa/o/ou76wi7vip8o8fxzn1fxixpo2ddqm8m2/?to=https%3A%2F%2Fru.aliexpress.com%2Fitem%2FHeadphone-Sennheiser-CX-3-00-Headphone-for-phone%2F32798323420.html';
 
@@ -120,7 +121,6 @@ function JsInject() {
     xhr.setRequestHeader('Content-Type', 'application/json')
     xhr.onreadystatechange = function(){
       if(xhr.readyState == 4 && xhr.status == 200){
-        console.log(xhr.responseText);
       }
     }
     xhr.send(json);
